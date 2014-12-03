@@ -1,0 +1,16 @@
+# Uncomment this line to define a global platform for your project
+platform :ios, "6.0"
+
+source 'https://github.com/CocoaPods/Specs.git'
+
+target "bloodBank" do
+
+pod 'MBProgressHUD'
+pod 'Toast'
+
+end
+
+target "bloodBankTests" do
+
+end
+

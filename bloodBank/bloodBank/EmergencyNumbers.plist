@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Emergency</key>
+	<string>108</string>
+	<key>Police</key>
+	<string>100</string>
+	<key>Fire</key>
+	<string>100</string>
+	<key>Ambulance</key>
+	<string>100</string>
+	<key>Ambulance - 2</key>
+	<string>100</string>
+	<key>Ambulance - 3</key>
+	<string>100</string>
+	<key>Ambulance - 4</key>
+	<string>100</string>
+	<key>Ambulance - 5</key>
+	<string>100</string>
+</dict>
+</plist>

@@ -1,0 +1,1 @@
+PODS_BLOODBANK_MBPROGRESSHUD_OTHER_LDFLAGS = -framework "CoreGraphics"
