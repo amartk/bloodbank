@@ -125,7 +125,8 @@
         {
             //UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"" message:@"You will be redirected to itunes page" delegate:self cancelButtonTitle:@"Ok" otherButtonTitles:nil, nil];
             //[alert show];
-            [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"http://appstore.com/bloodbank"]];
+            [self.navigationController.view makeToast:@"You ll be redirected to itunes page" duration:2.0f position:CSToastPositionBottom];
+//            [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"http://appstore.com/bloodbank"]];
 
         }
             break;
@@ -150,7 +151,6 @@
     } else {
         UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"" message:@"Please congifure your mail to send feedback" delegate:self cancelButtonTitle:@"Ok" otherButtonTitles:nil, nil];
         [alert show];
-
     }
 }
 

@@ -8,12 +8,16 @@
 
 #import "BBFindDonorViewController.h"
 #import "MBProgressHUD.h"
+#import "FindDonorTableViewCell.h"
+#import "UIView+Toast.h"
 
-@interface BBFindDonorViewController ()
+@interface BBFindDonorViewController () <FindDonorTableViewCellDelegate, UIScrollViewDelegate>
 {
     NSInteger focussedTextFieldTag;
     BOOL isPickerViewShowing;
     NSArray *groupsList;
+    NSInteger currentMaxDisplayedCell;
+    NSInteger currentScrolledCell;
 }
 
 @end
@@ -133,6 +137,10 @@
 }
 
 #pragma mark - PickerView Delegates -
+-(void)resetViewedCells{
+    currentScrolledCell = -999;
+    currentMaxDisplayedCell = 0;
+}
 
 -(NSInteger)numberOfComponentsInPickerView:(UIPickerView *)pickerView
 {
@@ -186,12 +194,19 @@
 
 - (IBAction)searchDonors:(id)sender {
     
+    if ([[_bloodGroup text] isEqualToString:@""]) {
+        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"" message:@"Please select blood group" delegate:nil cancelButtonTitle:@"Ok" otherButtonTitles:nil, nil];
+        [alert show];
+    }
+    
     [[(UITextField *)self.view viewWithTag:focussedTextFieldTag] resignFirstResponder];
     [MBProgressHUD showHUDAddedTo:self.navigationController.view animated:YES];
     
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(3 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
         [MBProgressHUD hideHUDForView:self.navigationController.view animated:YES];
+        [self resetViewedCells];
         [_donorsListTableView setHidden:NO];
+        [_donorsListTableView reloadData];
         
     });
 }
@@ -210,14 +225,78 @@
 
 -(UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"FindDonorTableCell"];
-    if (!cell) {
-        cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:@"FindDonorTableCell"];
+    FindDonorTableViewCell *donorTableViewCell = [tableView dequeueReusableCellWithIdentifier:@"FindDonorTableCell"];
+    if (!donorTableViewCell) {
+        donorTableViewCell = [[FindDonorTableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:@"FindDonorTableCell"];
+    }
+    donorTableViewCell.delegate = self;
+    donorTableViewCell.donorName.text = @"Amarnath TK";
+    donorTableViewCell.donorCity.text = @"Chennai";
+    donorTableViewCell.memberSince.text = @"Donor since 12/26/2014";
+    return donorTableViewCell;
+}
+
+- (void)tableView:(UITableView *)tableView willDisplayCell:(UITableViewCell *)cell forRowAtIndexPath:(NSIndexPath *)indexPath{
+    
+    if (indexPath.row > currentMaxDisplayedCell){ //this check makes cells only animate the first time you view them (as you're scrolling down) and stops them re-animating as you scroll back up, or scroll past them for a second time.
+        
+        //now make the image view a bit bigger, so we can do a zoomout effect when it becomes visible
+        cell.contentView.alpha = 0.3f;
+        
+        CGAffineTransform transformScale = CGAffineTransformMakeScale(1.15f, 1.15f);
+        CGAffineTransform transformTranslate = CGAffineTransformMakeTranslation(0.0f, 0.0f);
+        
+        cell.contentView.transform = CGAffineTransformConcat(transformScale, transformTranslate);
+        
+        [_donorsListTableView bringSubviewToFront:cell.contentView];
+        [UIView animateWithDuration:0.65f
+                              delay:0
+                            options:UIViewAnimationOptionAllowUserInteraction
+                         animations:^{
+                             cell.contentView.alpha = 1;
+                             //clear the transform
+                             cell.contentView.transform = CGAffineTransformIdentity;
+                         } completion:nil];
+        
+        
+        currentMaxDisplayedCell = indexPath.row;
+    }
+}
+
+-(void)scrollViewWillBeginDragging:(UIScrollView *)scrollView
+{
+    FindDonorTableViewCell *donorCell = (FindDonorTableViewCell *)[_donorsListTableView cellForRowAtIndexPath:[NSIndexPath indexPathForItem:currentScrolledCell inSection:0]];
+    [donorCell.myScrollView setContentOffset:CGPointZero animated:YES];
+}
+
+
+#pragma mark - FindDonorTableViewCellDelegate -
+
+-(void)cellDidScroll:(FindDonorTableViewCell *)cell
+{
+    NSIndexPath *indexPath = [_donorsListTableView indexPathForCell:cell];
+    FindDonorTableViewCell *donorCell = (FindDonorTableViewCell *)[_donorsListTableView cellForRowAtIndexPath:[NSIndexPath indexPathForItem:currentScrolledCell inSection:0]];
+    if (donorCell) {
+        [donorCell.myScrollView setContentOffset:CGPointZero animated:YES];
     }
     
-    cell.textLabel.text = @"donorName";
-    cell.detailTextLabel.text = @"Donor City";
-    return cell;
+    currentScrolledCell = indexPath.row;
 }
+
+-(void)cellDidSelectCall:(FindDonorTableViewCell *)cell
+{
+    [self.navigationController.view makeToast:@"The call feature is still pending"];
+}
+
+-(void)cellDidSelectMessage:(FindDonorTableViewCell *)cell
+{
+    [self.navigationController.view makeToast:@"The message feature is still pending"];
+}
+
+-(void)cellDidSelectMail:(FindDonorTableViewCell *)cell
+{
+    [self.navigationController.view makeToast:@"The mail feature is still pending"];
+}
+
 
 @end

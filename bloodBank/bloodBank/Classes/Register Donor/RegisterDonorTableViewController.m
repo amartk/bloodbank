@@ -270,7 +270,19 @@
         return FALSE;
     }
     
+    textField = (UITextField *)[self.view viewWithTag:startTextFieldTag + 5];
+    if (![self isValidEmail:textField.text]) {
+        [self showAlertWithMessage:@"Please enter a valid email address" tag:999];
+        return FALSE;
+    }
     return TRUE;
+}
+
+-(BOOL) isValidEmail:(NSString *)checkString
+{
+    NSString *laxString = @".+@([A-Za-z0-9-]+\\.)+[A-Za-z]{2}[A-Za-z]*";
+    NSPredicate *emailTest = [NSPredicate predicateWithFormat:@"SELF MATCHES %@", laxString];
+    return [emailTest evaluateWithObject:checkString];
 }
 
 -(void)showAlertWithMessage:(NSString *)message tag:(NSInteger)alertTag

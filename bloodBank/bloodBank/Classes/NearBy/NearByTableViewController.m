@@ -10,11 +10,14 @@
 #import "NearByTableViewCell.h"
 #import "BBNearbyDetailTableViewController.h"
 #import "BBUtilityManager.h"
+#import <CoreLocation/CoreLocation.h>
 
 @interface NearByTableViewController ()
 {
     NSDictionary *nearByItemsList;
     NSArray *nearByItemsKeys;
+    CLLocationManager *locationManager;
+    
 }
 @end
 
@@ -24,7 +27,13 @@
     [super viewDidLoad];
     
     nearByItemsList = [[NSDictionary alloc] initWithContentsOfFile:[[NSBundle mainBundle] pathForResource:@"NearByItems" ofType:@"plist"]];
+    
+    locationManager = [[CLLocationManager alloc] init];
 
+    if ([locationManager respondsToSelector:@selector(requestWhenInUseAuthorization)]) {
+        [locationManager requestWhenInUseAuthorization];
+    }
+    
     nearByItemsKeys = [[nearByItemsList allKeys] sortedArrayUsingSelector:@selector(localizedCaseInsensitiveCompare:)];
     // Uncomment the following line to preserve selection between presentations.
     // self.clearsSelectionOnViewWillAppear = NO;
@@ -135,7 +144,32 @@
         [alert show];
         return NO;
     }
+    
+    if (![CLLocationManager locationServicesEnabled]) {
+        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"" message:@"Please enable location services on your device. Go to Settings -> Privacy -> Location services" delegate:self cancelButtonTitle:@"Ok" otherButtonTitles:nil, nil];
+        [alert show];
+        return NO;
+    }
+    
+    if ( [CLLocationManager authorizationStatus] == kCLAuthorizationStatusDenied
+        || [CLLocationManager authorizationStatus] == kCLAuthorizationStatusNotDetermined
+        || [CLLocationManager authorizationStatus] == kCLAuthorizationStatusRestricted ) {
+        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"" message:@"Please enable bloodbank to use your current location. Go to Settings -> Privacy -> Location services" delegate:self cancelButtonTitle:@"Ok" otherButtonTitles:nil, nil];
+        [alert setTag:123];
+        [alert show];
+        return NO;
+        
+    }
     return YES;
+}
+
+-(void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex
+{
+    if (alertView.tag == 123) {
+        if ([[UIApplication sharedApplication] canOpenURL:[NSURL URLWithString:UIApplicationOpenSettingsURLString]]) {
+            [[UIApplication sharedApplication] openURL:[NSURL URLWithString:UIApplicationOpenSettingsURLString]];
+        }
+    }
 }
 
 @end

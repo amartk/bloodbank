@@ -8,8 +8,9 @@
 
 #import <UIKit/UIKit.h>
 #import "TTUITableViewZoomController.h"
+#import <CoreLocation/CoreLocation.h>
 
-@interface BBNearbyDetailTableViewController : TTUITableViewZoomController
+@interface BBNearbyDetailTableViewController : TTUITableViewZoomController <CLLocationManagerDelegate, UIAlertViewDelegate>
 
 @property(nonatomic, strong) NSString *itemName;
 @property(nonatomic, strong) NSString *pageTitle;

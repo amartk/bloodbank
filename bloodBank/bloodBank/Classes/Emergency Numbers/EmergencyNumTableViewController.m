@@ -61,7 +61,6 @@
     [cell.callButton addTarget:self action:@selector(callNumber:forEvent:) forControlEvents:UIControlEventTouchUpInside];
     // Configure the cell...
     
-    
     return cell;
 }
 

@@ -10,9 +10,15 @@
 #import "MBProgressHUD.h"
 #import "UIView+Toast.h"
 
+#define ERROR_FETCHING_LOCATION 100
+
 @interface BBNearbyDetailTableViewController ()
 {
     NSArray *itemsList;
+    CLLocationManager *locationManager;
+    NSString *postalCode;
+    CLLocation *currentLocation;
+    
 }
 @end
 
@@ -25,6 +31,10 @@
     
     // Uncomment the following line to display an Edit button in the navigation bar for this view controller.
     // self.navigationItem.rightBarButtonItem = self.editButtonItem;
+    locationManager = [[CLLocationManager alloc] init];
+    [locationManager setDesiredAccuracy:kCLLocationAccuracyHundredMeters];
+    [locationManager setDelegate:self];
+    [locationManager setDistanceFilter:50];
 }
 
 -(void)viewWillAppear:(BOOL)animated
@@ -33,25 +43,67 @@
 
     //self.navigationItem.title = _pageTitle;
     [MBProgressHUD showHUDAddedTo:self.navigationController.view animated:YES];
+    [locationManager startUpdatingLocation];
 }
 
 -(void)viewDidAppear:(BOOL)animated
 {
     [super viewDidAppear:animated];
-    
-    //Fetch the data using google places
-    NSString *url =  [NSString stringWithFormat:@"https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=13.0011774,80.2564956&radius=1500&types=%@&key=AIzaSyCnfGlQmhMefserzXx_7Vv4iruP8_cQ0Ok", _itemName];
-    
-    NSURL *googleRequestURL=[NSURL URLWithString:[url stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
-    NSData* data = [NSData dataWithContentsOfURL:googleRequestURL];
-    [self performSelectorOnMainThread:@selector(googleResponseCallBack:) withObject:data waitUntilDone:YES];
-
-    
 }
 
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.
+}
+
+
+-(void)locationManager:(CLLocationManager *)manager didUpdateLocations:(NSArray *)locations
+{
+    currentLocation = [locations lastObject];
+    NSLog(@"%@", currentLocation);
+    if (currentLocation != nil) {
+        
+        [[[CLGeocoder alloc] init] reverseGeocodeLocation:currentLocation completionHandler:^(NSArray *placemarks, NSError *error) {
+            if (error == nil && [placemarks count]) {
+                CLPlacemark *placemark = [placemarks lastObject];
+                NSLog(@"%@", placemark.postalCode);
+                postalCode = placemark.postalCode;
+                [self handleSelectedItem];
+
+            } else {
+                [self handleSelectedItem];
+            }
+        }];
+        
+        
+    } else {
+        [self showLocationFailureAlert];
+    }
+}
+
+-(void)locationManager:(CLLocationManager *)manager didFailWithError:(NSError *)error
+{
+    NSLog(@"Fetching location failed %@", error);
+    [self showLocationFailureAlert];
+}
+
+-(void)handleSelectedItem
+{
+    if ([_itemName isEqualToString:@"hospital"]) {
+        //Fetch the data using google places
+        NSString *url =  [NSString stringWithFormat:@"https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=%f,%f&radius=1500&types=%@&key=AIzaSyCnfGlQmhMefserzXx_7Vv4iruP8_cQ0Ok", currentLocation.coordinate.latitude, currentLocation.coordinate.longitude, _itemName];
+        NSURL *googleRequestURL=[NSURL URLWithString:[url stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+        NSData* data = [NSData dataWithContentsOfURL:googleRequestURL];
+        [self performSelectorOnMainThread:@selector(googleResponseCallBack:) withObject:data waitUntilDone:YES];
+    } else if ([_itemName isEqualToString:@"Donors"]) {
+        
+        [MBProgressHUD hideAllHUDsForView:self.navigationController.view animated:YES];
+        NSString *message = [NSString stringWithFormat:@"your pincode will be used to fetch the nesar by donors list %@", postalCode];
+        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"" message:message delegate:self cancelButtonTitle:@"Ok" otherButtonTitles:nil, nil];
+        [alert show];
+    }
+    
+
 }
 
 -(void)googleResponseCallBack:(NSData *)responseData
@@ -164,4 +216,19 @@
 }
 */
 
+-(void)showLocationFailureAlert
+{
+    [MBProgressHUD hideAllHUDsForView:self.navigationController.view animated:YES];
+    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"" message:@"Error in fetching location" delegate:self cancelButtonTitle:@"Ok" otherButtonTitles:nil, nil];
+    [alert setTag:ERROR_FETCHING_LOCATION];
+    [alert show];
+}
+
+-(void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex
+{
+    if (alertView.tag == ERROR_FETCHING_LOCATION) {
+        //[self.navigationController popViewControllerAnimated:YES];
+        
+    }
+}
 @end
